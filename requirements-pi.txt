@@ -1,0 +1,9 @@
+# Install PyTorch/torchvision for Raspberry Pi separately if needed.
+# Then install these shared project dependencies inside /home/pi/.venv.
+PyYAML
+numpy
+datasets
+tqdm
+scikit-learn
+matplotlib
+pytest

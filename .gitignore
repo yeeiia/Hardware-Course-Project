@@ -216,3 +216,30 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# FedAvg training artifacts
+runs/
+data/
+datasets/
+checkpoints/
+outputs/
+wandb/
+mlruns/
+lightning_logs/
+tensorboard/
+
+# Model checkpoints and serialized experiment data
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+
+# Generated figures and simulation outputs
+*.vcd
+simulation
