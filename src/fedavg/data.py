@@ -7,7 +7,6 @@ from typing import Any
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset, Subset
-from torchvision import transforms
 
 
 HF_DATASET_NAMES = {
@@ -27,23 +26,8 @@ class HFDataset(Dataset):
     def __init__(self, dataset: Any, dataset_name: str, train: bool) -> None:
         self.dataset = dataset
         self.dataset_name = dataset_name
-        if dataset_name == "mnist":
-            self.transform = transforms.Compose(
-                [
-                    transforms.Grayscale(num_output_channels=1),
-                    transforms.ToTensor(),
-                    transforms.Normalize((0.1307,), (0.3081,)),
-                ]
-            )
-        elif dataset_name == "cifar10":
-            self.transform = transforms.Compose(
-                [
-                    transforms.RandAugment(num_ops=1, magnitude=5) if train else transforms.Lambda(lambda x: x),
-                    transforms.ToTensor(),
-                    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
-                ]
-            )
-        else:
+        self.train = train
+        if dataset_name not in {"mnist", "cifar10"}:
             raise ValueError(f"unknown dataset: {dataset_name}")
 
     def __len__(self) -> int:
@@ -53,7 +37,22 @@ class HFDataset(Dataset):
         item = self.dataset[int(index)]
         image = item["image"] if "image" in item else item["img"]
         label = int(item["label"])
-        return self.transform(image), label
+        return _image_to_tensor(image, self.dataset_name, self.train), label
+
+
+def _image_to_tensor(image: Any, dataset_name: str, train: bool = False) -> torch.Tensor:
+    if dataset_name == "mnist":
+        array = np.asarray(image.convert("L"), dtype=np.float32) / 255.0
+        tensor = torch.from_numpy(array).unsqueeze(0)
+        return (tensor - 0.1307) / 0.3081
+    if dataset_name == "cifar10":
+        pil_image = image.convert("RGB")
+        array = np.asarray(pil_image, dtype=np.float32) / 255.0
+        tensor = torch.from_numpy(array).permute(2, 0, 1)
+        mean = torch.tensor([0.4914, 0.4822, 0.4465], dtype=tensor.dtype).view(3, 1, 1)
+        std = torch.tensor([0.2470, 0.2435, 0.2616], dtype=tensor.dtype).view(3, 1, 1)
+        return (tensor - mean) / std
+    raise ValueError(f"unknown dataset: {dataset_name}")
 
 
 class SyntheticVisionDataset(Dataset):

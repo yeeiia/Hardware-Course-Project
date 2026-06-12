@@ -4,7 +4,19 @@ This project implements classic FedAvg with a raw Socket protocol. The Windows P
 
 ## Current Mode
 
-The current implementation is for Windows local simulation first. Do not connect or migrate to Raspberry Pi nodes until explicitly requested. The deployment helper targets `RaspberryPi_2` and `RaspberryPi_3`.
+The implementation supports both Windows local simulation and real Raspberry Pi clients. The deployment helper targets `RaspberryPi_2` and `RaspberryPi_3`.
+
+## FedAvg Parameters
+
+The parameter meanings follow the Google FedAvg paper, "Communication-Efficient Learning of Deep Networks from Decentralized Data":
+
+- `B`: local mini-batch size. In config files this is `batch_size`.
+- `E`: number of local epochs per communication round. In config files this is `local_epochs`.
+- `rounds`: number of server aggregation rounds.
+
+For each round, the server sends the current global model to each client. Each client then trains over its local partition for `E` full local epochs using mini-batches of size `B`, uploads the resulting model weights once, and the server performs sample-count weighted FedAvg aggregation.
+
+For example, if one Raspberry Pi has about 1000 local MNIST samples and `B=16, E=1`, it runs about `ceil(1000 / 16)` local mini-batch updates before one upload. It does not upload after every mini-batch.
 
 ## Quick Start on Windows
 
