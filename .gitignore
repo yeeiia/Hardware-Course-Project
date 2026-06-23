@@ -21,16 +21,10 @@ env/
 .DS_Store
 Thumbs.db
 
-# Project outputs
-runs/
+# Project outputs (keep metrics/config/figures, skip model checkpoints)
 checkpoints/
 *.pt
 *.pth
-
-# Metrics and figures (generated per run — keep only result/ for final archive)
-metrics.csv
-metrics.jsonl
-figures/
 
 # Jupyter
 .ipynb_checkpoints/
