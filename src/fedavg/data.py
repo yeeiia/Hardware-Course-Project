@@ -81,10 +81,14 @@ def seed_everything(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-def _limited(dataset: Dataset, limit: int | None) -> Dataset:
+def _limited(dataset: Dataset, limit: int | None, seed: int = 42) -> Dataset:
     if limit is None:
         return dataset
-    return Subset(dataset, list(range(min(limit, len(dataset)))))
+    # Random permutation seeded for reproducibility — avoids class imbalance
+    # caused by simple truncation (CIFAR-10 is ordered by class).
+    rng = np.random.RandomState(seed)
+    indices: list[int] = rng.permutation(len(dataset))[:limit].tolist()
+    return Subset(dataset, indices)
 
 
 def _labels(dataset: Dataset) -> list[int]:
@@ -113,13 +117,23 @@ def load_data(config: dict[str, Any]) -> DataBundle:
     else:
         from datasets import DownloadMode, load_dataset
 
-        hf_name = HF_DATASET_NAMES[dataset_name]
-        ds = load_dataset(hf_name, download_mode=DownloadMode.REUSE_DATASET_IF_EXISTS)
+        # Prefer local parquet directory when specified (avoids HF Hub even in offline mode)
+        data_dir = data_config.get("data_dir")
+        if data_dir:
+            from pathlib import Path
+            dd = Path(data_dir)
+            ds = load_dataset("parquet", data_files={
+                "train": str(dd / "train-*.parquet"),
+                "test": str(dd / "test-*.parquet"),
+            })
+        else:
+            hf_name = HF_DATASET_NAMES[dataset_name]
+            ds = load_dataset(hf_name, download_mode=DownloadMode.REUSE_DATASET_IF_EXISTS)
         train = HFDataset(ds["train"], dataset_name, train=True)
         test = HFDataset(ds["test"], dataset_name, train=False)
 
-    train = _limited(train, train_limit)
-    test = _limited(test, test_limit)
+    train = _limited(train, train_limit, seed=seed)
+    test = _limited(test, test_limit, seed=seed + 1)
     return DataBundle(train=train, test=test, labels=_labels(train))
 
 

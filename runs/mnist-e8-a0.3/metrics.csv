@@ -1,0 +1,7 @@
+round,phase,dataset,model,split,B,E,client_id,train_loss,global_loss,accuracy,macro_f1,train_time,eval_time,bytes_sent,bytes_recv,samples,peak_memory_mb,num_params,comm_bytes_per_round,status,pi_temp,pi_throttled
+1,train,mnist,tinycnn_mnist,dirichlet,64,8,client0,0.3250178681473588,,,,6.0772633999999925,,,,28832.0,,,,ok,,
+1,train,mnist,tinycnn_mnist,dirichlet,64,8,client1,0.208640788436452,,,,11.658014200000252,,,,51168.0,,,,ok,,
+1,eval,mnist,tinycnn_mnist,dirichlet,64,8,server,,0.12847817504405976,0.9595,0.958625162053791,,0.42384199999969496,,,,,,,,,
+2,train,mnist,tinycnn_mnist,dirichlet,64,8,client0,0.06542434891221732,,,,6.329641199999969,,,,28832.0,,,,ok,,
+2,train,mnist,tinycnn_mnist,dirichlet,64,8,client1,0.04583803125259043,,,,11.236828799999785,,,,51168.0,,,,ok,,
+2,eval,mnist,tinycnn_mnist,dirichlet,64,8,server,,0.08243896032869816,0.974,0.9738177019113579,,0.3616612000000714,,,,,,,,,

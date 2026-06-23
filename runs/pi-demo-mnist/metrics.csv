@@ -1,0 +1,10 @@
+round,phase,dataset,model,split,B,E,client_id,train_loss,global_loss,accuracy,macro_f1,train_time,eval_time,bytes_sent,bytes_recv,samples,peak_memory_mb,status,pi_temp,pi_throttled
+1,train,mnist,tinycnn_mnist,iid,8,1,pi127,0.4372896185870014,,,,21.724640836999924,,430219,429840,4998,517.03515625,ok,temp=75.4'C,throttled=0x0
+1,train,mnist,tinycnn_mnist,iid,8,1,pi99,0.409690374140961,,,,23.77767191099997,,430219,429835,5002,522.9921875,ok,temp=44.3'C,throttled=0x0
+1,eval,mnist,tinycnn_mnist,iid,8,1,server,,0.23603781870007515,0.926,0.9239682899789174,,1.3717446000009659,860438,859675,,,,,
+2,train,mnist,tinycnn_mnist,iid,8,1,pi127,0.15572813165844793,,,,21.662958375000017,,860438,859586,4998,517.5390625,ok,temp=77.4'C,throttled=0x0
+2,train,mnist,tinycnn_mnist,iid,8,1,pi99,0.14796640904948358,,,,26.86852538900007,,860438,859578,5002,523.796875,ok,temp=45.7'C,throttled=0x0
+2,eval,mnist,tinycnn_mnist,iid,8,1,server,,0.11661235920339823,0.963,0.9626323496327966,,0.7184772000000521,1720876,1719164,,,,,
+3,train,mnist,tinycnn_mnist,iid,8,1,pi127,0.11392046958992572,,,,21.72481810599993,,1290657,1289332,4998,517.95703125,ok,temp=79.3'C,throttled=0x0
+3,train,mnist,tinycnn_mnist,iid,8,1,pi99,0.09683739676594133,,,,23.648639898000056,,1290657,1289324,5002,523.80859375,ok,temp=46.7'C,throttled=0x0
+3,eval,mnist,tinycnn_mnist,iid,8,1,server,,0.10314568700781092,0.967,0.9668645157984818,,0.6867102999967756,2581314,2578656,,,,,

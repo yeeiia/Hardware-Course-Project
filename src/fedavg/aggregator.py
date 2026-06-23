@@ -33,8 +33,8 @@ def fedavg(state_dicts: list[dict[str, torch.Tensor]], sample_counts: list[int])
         accum = torch.zeros_like(state_dicts[0][key], dtype=torch.float32)
         for state, count in zip(state_dicts, sample_counts):
             # 权重 = n_k / Σ n_k，对应论文公式中的样本占比加权。
-            # detach 防止串入计算图，cpu 防止设备不一致，float 升精度。
-            accum += state[key].detach().cpu().float() * (float(count) / total)
+            # detach 防止串入计算图，float 升精度。
+            accum += state[key].detach().float().to(accum.device) * (float(count) / total)
         target_dtype = state_dicts[0][key].dtype
         if torch.is_floating_point(state_dicts[0][key]):
             # 浮点参数：直接 cast 回原 dtype。

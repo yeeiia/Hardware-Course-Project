@@ -38,6 +38,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "dir": "runs",
         "name": None,
         "save_every_round": True,
+        "early_stop_patience": 0,
+        "early_stop_min_delta": 0.001,
     },
 }
 

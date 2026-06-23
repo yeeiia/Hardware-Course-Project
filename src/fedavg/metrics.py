@@ -34,6 +34,8 @@ METRIC_FIELDS = [
     "bytes_recv",
     "samples",
     "peak_memory_mb",
+    "num_params",
+    "comm_bytes_per_round",
     "status",
     "pi_temp",
     "pi_throttled",
@@ -41,7 +43,9 @@ METRIC_FIELDS = [
 
 
 class RunLogger:
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any],
+                 early_stop_patience: int = 0,
+                 early_stop_min_delta: float = 0.001) -> None:
         root = Path(config["run"]["dir"])
         name = config["run"].get("name")
         if not name:
@@ -60,6 +64,13 @@ class RunLogger:
         self.jsonl_path.write_text("", encoding="utf-8")
         with self.csv_path.open("w", encoding="utf-8", newline="") as f:
             csv.DictWriter(f, fieldnames=METRIC_FIELDS, extrasaction="ignore").writeheader()
+        # --- Early stopping & best-model tracking ---
+        self.early_stop_patience = early_stop_patience
+        self.early_stop_min_delta = early_stop_min_delta
+        self.best_accuracy: float = -float("inf")
+        self.best_round: int = 0
+        self.rounds_without_improvement: int = 0
+        self.best_model_path = self.run_dir / "best_model.pt"
 
     def log(self, record: dict[str, Any]) -> None:
         normalized = {field: record.get(field, "") for field in METRIC_FIELDS}
@@ -71,6 +82,25 @@ class RunLogger:
 
     def save_checkpoint(self, state_dict: dict[str, torch.Tensor], round_index: int) -> None:
         torch.save(state_dict, self.checkpoint_dir / f"global_round_{round_index:03d}.pt")
+
+    def save_best(self, state_dict: dict[str, torch.Tensor], round_index: int, accuracy: float) -> bool:
+        """Save model if accuracy improved beyond min_delta. Returns True if new best."""
+        if accuracy > self.best_accuracy + self.early_stop_min_delta:
+            self.best_accuracy = accuracy
+            self.best_round = round_index
+            self.rounds_without_improvement = 0
+            # Deep-copy to CPU to avoid holding GPU memory across rounds
+            cpu_state = {k: v.detach().cpu().clone() for k, v in state_dict.items()}
+            torch.save(cpu_state, self.best_model_path)
+            return True
+        self.rounds_without_improvement += 1
+        return False
+
+    def check_early_stop(self) -> bool:
+        """Return True if training should stop early."""
+        if self.early_stop_patience <= 0:
+            return False
+        return self.rounds_without_improvement >= self.early_stop_patience
 
     def plot_curves(self) -> None:
         eval_records = [r for r in self.records if r.get("phase") == "eval"]
