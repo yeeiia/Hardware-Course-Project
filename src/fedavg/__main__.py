@@ -8,6 +8,7 @@ from collections.abc import Callable, Sequence
 COMMANDS = {
     "client": "fedavg.client",
     "matrix": "fedavg.experiment_matrix",
+    "mnist-comm-sweep": "fedavg.mnist_comm_sweep",
     "optuna": "fedavg.optuna_sweep",
     "run-experiments": "fedavg.run_experiments",
     "server": "fedavg.server",
@@ -21,6 +22,7 @@ def _usage() -> str:
         "usage: python -m fedavg <command> [args]\n\n"
         f"commands: {commands}\n\n"
         "examples:\n"
+        "  python -m fedavg mnist-comm-sweep --smoke\n"
         "  python -m fedavg simulate --config configs/mnist_iid_b16_e1.yaml --clients 2\n"
         "  python -m fedavg server --config configs/pi_server.yaml\n"
         "  python -m fedavg client --config configs/pi_client.yaml --client-id pi0 --client-index 0"

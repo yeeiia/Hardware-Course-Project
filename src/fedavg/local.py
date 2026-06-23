@@ -52,6 +52,8 @@ def run_fedavg_local(config: dict[str, Any]) -> str:
     model = build_model(config["model"]).to(device)
     early_stop_patience = int(config["run"].get("early_stop_patience", 0))
     early_stop_min_delta = float(config["run"].get("early_stop_min_delta", 0.001))
+    low_accuracy_stop_rounds = int(config["run"].get("low_accuracy_stop_rounds", 0))
+    low_accuracy_min_acc = float(config["run"].get("low_accuracy_min_acc", 0.0))
     logger = RunLogger(config,
                        early_stop_patience=early_stop_patience,
                        early_stop_min_delta=early_stop_min_delta)
@@ -87,6 +89,7 @@ def run_fedavg_local(config: dict[str, Any]) -> str:
                     "train_loss": stats["train_loss"],
                     "train_time": stats["train_time"],
                     "samples": stats["samples"],
+                    "peak_memory_mb": stats.get("peak_memory_mb", 0.0),
                     "status": "ok",
                 })
                 logger.log(record)
@@ -111,6 +114,16 @@ def run_fedavg_local(config: dict[str, Any]) -> str:
 
             # --- Early stopping ---
             logger.save_best(model.state_dict(), round_index, eval_metrics["accuracy"])
+            if (
+                low_accuracy_stop_rounds > 0
+                and round_index >= low_accuracy_stop_rounds
+                and logger.best_accuracy < low_accuracy_min_acc
+            ):
+                _log(
+                    f"low-accuracy stop at round {round_index}: "
+                    f"best accuracy={logger.best_accuracy:.4f} below {low_accuracy_min_acc:.4f}"
+                )
+                break
             if logger.check_early_stop():
                 _log(
                     f"early stopping at round {round_index}: "
