@@ -1,0 +1,2 @@
+round,phase,dataset,model,split,B,E,client_id,train_loss,global_loss,accuracy,macro_f1,train_time,eval_time,bytes_sent,bytes_recv,samples,peak_memory_mb,status,pi_temp,pi_throttled
+1,train,mnist,tinycnn_mnist,iid,8,8,client0,2.3137194685152367,,,,30.533945800038055,,,,40016.0,623.37109375,ok,,

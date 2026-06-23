@@ -41,7 +41,12 @@ METRIC_FIELDS = [
 
 
 class RunLogger:
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        config: dict[str, Any],
+        early_stop_patience: int = 0,
+        early_stop_min_delta: float = 0.001,
+    ) -> None:
         root = Path(config["run"]["dir"])
         name = config["run"].get("name")
         if not name:
@@ -50,6 +55,7 @@ class RunLogger:
         self.run_dir = root / name
         self.checkpoint_dir = self.run_dir / "checkpoints"
         self.figure_dir = self.run_dir / "figures"
+        self._config_run = config["run"]
         self.run_dir.mkdir(parents=True, exist_ok=True)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         self.figure_dir.mkdir(parents=True, exist_ok=True)
@@ -57,6 +63,11 @@ class RunLogger:
         self.jsonl_path = self.run_dir / "metrics.jsonl"
         self.csv_path = self.run_dir / "metrics.csv"
         self.records: list[dict[str, Any]] = []
+        self.early_stop_patience = max(0, int(early_stop_patience))
+        self.early_stop_min_delta = float(early_stop_min_delta)
+        self.best_accuracy = float("-inf")
+        self.best_round = 0
+        self.rounds_without_improvement = 0
         self.jsonl_path.write_text("", encoding="utf-8")
         with self.csv_path.open("w", encoding="utf-8", newline="") as f:
             csv.DictWriter(f, fieldnames=METRIC_FIELDS, extrasaction="ignore").writeheader()
@@ -71,6 +82,26 @@ class RunLogger:
 
     def save_checkpoint(self, state_dict: dict[str, torch.Tensor], round_index: int) -> None:
         torch.save(state_dict, self.checkpoint_dir / f"global_round_{round_index:03d}.pt")
+
+    def save_best(self, state_dict: dict[str, torch.Tensor], round_index: int, accuracy: float) -> None:
+        if accuracy > self.best_accuracy + self.early_stop_min_delta:
+            self.best_accuracy = float(accuracy)
+            self.best_round = int(round_index)
+            self.rounds_without_improvement = 0
+            if self.config_run().get("save_best_model", False):
+                torch.save(state_dict, self.checkpoint_dir / "best.pt")
+        else:
+            self.rounds_without_improvement += 1
+
+    def check_early_stop(self) -> bool:
+        return (
+            self.early_stop_patience > 0
+            and self.best_round > 0
+            and self.rounds_without_improvement >= self.early_stop_patience
+        )
+
+    def config_run(self) -> dict[str, Any]:
+        return self._config_run
 
     def plot_curves(self) -> None:
         eval_records = [r for r in self.records if r.get("phase") == "eval"]
